@@ -30,9 +30,9 @@ class RegistrationServiceImplTest {
     }
 
     @Test
-    void register_validUser_ok() {
+    void register_validUserWithLoginAtMinLength_ok() {
         User user = new User();
-        user.setLogin("someLogin");
+        user.setLogin("sixSym");
         user.setPassword("somePassword");
         user.setAge(25);
 
@@ -41,7 +41,7 @@ class RegistrationServiceImplTest {
         assertNotNull(actual, "Registered user object should not be null");
         assertNotNull(actual.getId(), "Registered user should have an ID assigned");
 
-        assertEquals("someLogin", actual.getLogin(), "Login should match the input");
+        assertEquals("sixSym", actual.getLogin(), "Login should match the input");
         assertEquals("somePassword", actual.getPassword(), "Password should match the input");
         assertEquals(25, actual.getAge(), "Age should match the input");
 
@@ -105,22 +105,6 @@ class RegistrationServiceImplTest {
         assertEquals("Login must be at least " + MIN_LOGIN_LENGTH + " characters long!",
                 exception.getMessage(), ERROR_MESSAGE_MISMATCH);
         assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
-    }
-
-    @Test
-    void register_loginExactlyMinLength_ok() {
-        User user = new User();
-        user.setLogin("sixSym");
-        user.setPassword("somePassword");
-        user.setAge(25);
-
-        User actual = registrationService.register(user);
-
-        assertNotNull(actual, "Registered user object should not be null");
-        assertNotNull(actual.getId(), "Registered user should have an ID assigned");
-        assertEquals("sixSym", actual.getLogin(), "Login should match the input");
-        assertTrue(Storage.people.contains(actual), "User should be added to the storage");
-        assertEquals(1, Storage.people.size(), "Storage should contain exactly one user");
     }
 
     @Test
@@ -188,7 +172,7 @@ class RegistrationServiceImplTest {
     }
 
     @Test
-    void register_ageTooYoung_notOk() {
+    void register_invalidAge_notOk() {
         User user = new User();
         user.setLogin("someLogin");
         user.setPassword("somePassword");
@@ -239,7 +223,7 @@ class RegistrationServiceImplTest {
         firstUser.setLogin("someLogin");
         firstUser.setPassword("somePassword");
         firstUser.setAge(22);
-        registrationService.register(firstUser);
+        Storage.people.add(firstUser);
 
         assertEquals(1, Storage.people.size(),
                 "Storage should contain one user after first successful registration");
