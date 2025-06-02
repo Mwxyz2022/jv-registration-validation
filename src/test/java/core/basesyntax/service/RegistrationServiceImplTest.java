@@ -26,7 +26,7 @@ class RegistrationServiceImplTest {
     @BeforeEach
     void setUp() {
         Storage.people.clear();
-        registrationService = new RegistrationServiceImpl( new StorageDaoImpl());
+        registrationService = new RegistrationServiceImpl(new StorageDaoImpl());
     }
 
     @Test
