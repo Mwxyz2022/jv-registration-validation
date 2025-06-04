@@ -24,6 +24,23 @@ class RegistrationServiceImplTest {
 
     private RegistrationService registrationService;
 
+    private User createDefaultUser() {
+        User user = new User();
+        user.setLogin("someLogin");
+        user.setPassword("somePassword");
+        user.setAge(25);
+        return user;
+    }
+
+    private void assertStorageIsEmpty() {
+        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+    }
+
+    private void assertStorageContainsOnly(User user) {
+        assertEquals(1, Storage.people.size(), "Storage should contain exactly one user");
+        assertTrue(Storage.people.contains(user), "User should be added to the storage");
+    }
+
     @BeforeEach
     void setUp() {
         registrationService = new RegistrationServiceImpl(new StorageDaoImpl());
@@ -36,22 +53,12 @@ class RegistrationServiceImplTest {
 
     @Test
     void register_validUserWithLoginAtMinLength_ok() {
-        User user = new User();
+        User user = createDefaultUser();
         user.setLogin("sixSym");
-        user.setPassword("somePassword");
-        user.setAge(25);
-
         User actual = registrationService.register(user);
 
-        assertNotNull(actual, "Registered user object should not be null");
-        assertNotNull(actual.getId(), "Registered user should have an ID assigned");
-
-        assertEquals("sixSym", actual.getLogin(), "Login should match the input");
-        assertEquals("somePassword", actual.getPassword(), "Password should match the input");
-        assertEquals(25, actual.getAge(), "Age should match the input");
-
-        assertTrue(Storage.people.contains(actual), "User should be added to the storage");
-        assertEquals(1, Storage.people.size(), "Storage should contain exactly one user");
+        assertEquals(user, actual, "Returned user object should match the input user object");
+        assertStorageContainsOnly(actual);
     }
 
     @Test
@@ -61,15 +68,13 @@ class RegistrationServiceImplTest {
                 "Expected RegistrationException when user is null");
 
         assertEquals("User cannot be null!", exception.getMessage(), ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_nullLogin_notOk() {
-        User user = new User();
+        User user = createDefaultUser();
         user.setLogin(null);
-        user.setPassword("somePassword");
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
@@ -77,15 +82,13 @@ class RegistrationServiceImplTest {
 
         assertEquals("Login cannot be null or empty!", exception.getMessage(),
                 ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_emptyLogin_notOk() {
-        User user = new User();
+        User user = createDefaultUser();
         user.setLogin("");
-        user.setPassword("somePassword");
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
@@ -93,31 +96,27 @@ class RegistrationServiceImplTest {
 
         assertEquals("Login cannot be null or empty!", exception.getMessage(),
                 ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_loginTooShort_notOk() {
-        User user = new User();
+        User user = createDefaultUser();
         user.setLogin("short");
-        user.setPassword("somePassword");
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
                 "Expected RegistrationException when login is too short");
 
-        assertEquals("Login must be at least " + MIN_LOGIN_LENGTH + " characters long!",
+        assertEquals(String.format("Login must be at least %d characters long!", MIN_LOGIN_LENGTH),
                 exception.getMessage(), ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_nullPassword_notOk() {
-        User user = new User();
-        user.setLogin("someLogin");
+        User user = createDefaultUser();
         user.setPassword(null);
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
@@ -125,15 +124,13 @@ class RegistrationServiceImplTest {
 
         assertEquals("Password cannot be null or empty!", exception.getMessage(),
                 ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_emptyPassword_notOk() {
-        User user = new User();
-        user.setLogin("someLogin");
+        User user = createDefaultUser();
         user.setPassword("");
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
@@ -141,76 +138,66 @@ class RegistrationServiceImplTest {
 
         assertEquals("Password cannot be null or empty!", exception.getMessage(),
                 ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_passwordTooShort_notOk() {
-        User user = new User();
-        user.setLogin("someLogin");
+        User user = createDefaultUser();
         user.setPassword("short");
-        user.setAge(25);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
                 "Expected RegistrationException when password is too short");
 
-        assertEquals("Password must be at least " + MIN_PASSWORD_LENGTH + " characters long!",
+        assertEquals(
+                String.format("Password must be at least %d characters long!", MIN_PASSWORD_LENGTH),
                 exception.getMessage(), ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_passwordExactlyMinLength_ok() {
-        User user = new User();
-        user.setLogin("someLogin");
+        User user = createDefaultUser();
         user.setPassword("123456");
-        user.setAge(25);
 
         User actual = registrationService.register(user);
 
         assertNotNull(actual, "Registered user object should not be null");
-        assertNotNull(actual.getId(), "Registered user should have an ID assigned");
         assertEquals("123456", actual.getPassword(), "Password should match the input");
-        assertTrue(Storage.people.contains(actual), "User should be added to the storage");
-        assertEquals(1, Storage.people.size(), "Storage should contain exactly one user");
+        assertStorageContainsOnly(actual);
     }
 
     @Test
     void register_invalidAge_notOk() {
-        User user = new User();
-        user.setLogin("someLogin");
-        user.setPassword("somePassword");
+        User user = createDefaultUser();
         user.setAge(17);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
                 "Expected RegistrationException when user age is below minimum");
-        assertEquals("Not valid age: " + user.getAge() + ". Min allowed age is " + MIN_AGE,
+        assertEquals(String.format("User age must be at least %d!", MIN_AGE),
                 exception.getMessage(), ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_nullAge_notOk() {
-        User user = new User();
-        user.setLogin("someLogin");
-        user.setPassword("somePassword");
+        User user = createDefaultUser();
         user.setAge(null);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(user),
                 "Expected RegistrationException when age is null");
 
-        assertEquals("User age cannot be null!", exception.getMessage(), ERROR_MESSAGE_MISMATCH);
-        assertTrue(Storage.people.isEmpty(), "Storage should be empty after failed registration");
+        assertEquals(String.format("User age must be at least %d!", MIN_AGE),
+                exception.getMessage(), ERROR_MESSAGE_MISMATCH);
+        assertStorageIsEmpty();
     }
 
     @Test
     void register_ageExactlyMinAge_ok() {
-        User user = new User();
-        user.setLogin("someLogin");
-        user.setPassword("somePassword");
+        User user = createDefaultUser();
         user.setAge(18);
 
         User actual = registrationService.register(user);
@@ -218,37 +205,28 @@ class RegistrationServiceImplTest {
         assertNotNull(actual, "Registered user object should not be null");
         assertNotNull(actual.getId(), "Registered user should have an ID assigned");
         assertEquals(18, actual.getAge(), "Age should match the input");
-        assertTrue(Storage.people.contains(actual), "User should be added to the storage");
-        assertEquals(1, Storage.people.size(), "Storage should contain exactly one user");
+        assertStorageContainsOnly(actual);
     }
 
     @Test
     void register_duplicateLogin_notOk() {
-        User firstUser = new User();
-        firstUser.setLogin("someLogin");
-        firstUser.setPassword("somePassword");
-        firstUser.setAge(22);
+        User firstUser = createDefaultUser();
         Storage.people.add(firstUser);
 
-        assertEquals(1, Storage.people.size(),
-                "Storage should contain one user after first successful registration");
-        assertEquals("someLogin", Storage.people.get(0).getLogin(),
-                "The login of the first user in storage should be 'someLogin'");
+        assertStorageContainsOnly(firstUser);
 
-        User secondUser = new User();
-        secondUser.setLogin("someLogin");
-        secondUser.setPassword("anySomePassword");
-        secondUser.setAge(24);
+        User secondUser = createDefaultUser();
+        secondUser.setAge(28);
 
         RegistrationException exception = assertThrows(RegistrationException.class,
                 () -> registrationService.register(secondUser),
                 "Expected RegistrationException when trying to register with a duplicate login");
 
-        assertEquals("Login " + secondUser.getLogin() + " is already taken!",
+        assertEquals(String.format("Login %s is already taken!", secondUser.getLogin()),
                 exception.getMessage(), ERROR_MESSAGE_MISMATCH);
 
         assertEquals(1, Storage.people.size(), "Storage should still contain only the"
-                        + " first user after failed duplicate registration");
+                + " first user after failed duplicate registration");
         assertTrue(Storage.people.contains(firstUser),
                 "First registered user should still be present in the storage");
         assertFalse(Storage.people.contains(secondUser),

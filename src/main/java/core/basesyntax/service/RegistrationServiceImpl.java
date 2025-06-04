@@ -26,7 +26,8 @@ public class RegistrationServiceImpl implements RegistrationService {
         validateAge(user.getAge());
 
         if (storageDao.get(user.getLogin()) != null) {
-            throw new RegistrationException("Login " + user.getLogin() + " is already taken!");
+            throw new RegistrationException(
+                    String.format("Login %s is already taken!", user.getLogin()));
         }
 
         return storageDao.add(user);
@@ -38,8 +39,8 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
 
         if (login.length() < MIN_LOGIN_LENGTH) {
-            throw new RegistrationException("Login must be at least "
-                    + MIN_LOGIN_LENGTH + " characters long!");
+            throw new RegistrationException(
+                    String.format("Login must be at least %d characters long!", MIN_LOGIN_LENGTH));
         }
     }
 
@@ -48,18 +49,16 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new RegistrationException("Password cannot be null or empty!");
         }
         if (password.length() < MIN_PASSWORD_LENGTH) {
-            throw new RegistrationException("Password must be at least "
-                    + MIN_PASSWORD_LENGTH + " characters long!");
+            throw new RegistrationException(
+                    String.format("Password must be at least %d characters long!",
+                            MIN_PASSWORD_LENGTH));
         }
     }
 
     private void validateAge(Integer age) {
-        if (age == null) {
-            throw new RegistrationException("User age cannot be null!");
-        }
-        if (age < MIN_AGE) {
-            throw new RegistrationException("Not valid age: " + age
-                    + ". Min allowed age is " + MIN_AGE);
+        if (age == null || age < MIN_AGE) {
+            throw new RegistrationException(
+                    String.format("User age must be at least %d!", MIN_AGE));
         }
     }
 }
